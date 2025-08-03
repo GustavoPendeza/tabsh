@@ -80,7 +80,7 @@ export default function WeatherWidget({ settings }: Props) {
   };
 
   const fetchWeather = async (location: string) => {
-    setWeatherLoading(true);
+    if (!weather) setWeatherLoading(true);
 
     try {
       const city = location || 'São Paulo';
@@ -108,7 +108,7 @@ export default function WeatherWidget({ settings }: Props) {
   };
 
   const fetchWeatherByCoords = async (lat: number, lon: number) => {
-    setWeatherLoading(true);
+    if (!weather) setWeatherLoading(true);
 
     try {
       const weatherData = await getWeatherData(lat, lon);
@@ -208,7 +208,7 @@ export default function WeatherWidget({ settings }: Props) {
 
   return (
     <div className="absolute top-6 right-6 z-10">
-      <div className="flex min-h-36 min-w-[220px] items-center justify-center rounded-lg border border-gray-200/50 bg-white/90 p-4 text-gray-800 shadow-lg backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/90 dark:text-gray-100">
+      <div className="flex min-h-36 min-w-60 items-center justify-center rounded-lg border border-gray-200/50 bg-white/90 p-4 text-gray-800 shadow-lg backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/90 dark:text-gray-100">
         {weatherLoading ? (
           <div className="mx-auto h-6 w-6 animate-spin rounded-full border-b-2 border-current" />
         ) : weather ? (

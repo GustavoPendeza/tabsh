@@ -11,6 +11,7 @@ const defaultSettings: Settings = {
   backgroundColor: '',
   backgroundImage: '',
   weatherLocation: '',
+  weather: true,
   favorites: [
     { id: '1', name: 'Google', url: 'https://google.com' },
     { id: '2', name: 'YouTube', url: 'https://youtube.com' },
@@ -24,7 +25,7 @@ export default function HomePage() {
   useEffect(() => {
     const saved = localStorage.getItem('tabsh-settings');
     if (saved) {
-      setSettings(JSON.parse(saved));
+      setSettings({ ...defaultSettings, ...JSON.parse(saved) });
     }
   }, []);
 
@@ -70,7 +71,7 @@ export default function HomePage() {
       )}
 
       {/* Widget do clima */}
-      <WeatherWidget settings={settings} />
+      {settings.weather && <WeatherWidget settings={settings} />}
 
       {/* Botão de configurações */}
       <Configs

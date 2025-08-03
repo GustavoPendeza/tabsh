@@ -224,72 +224,73 @@ export default function Favorites({ settings, saveSettings }: Props) {
       <div className="relative flex min-h-screen items-center justify-center p-6">
         <div className="w-full max-w-4xl">
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-8">
-            {settings.favorites.map((favorite) => (
-              <div
-                key={favorite.id}
-                className="group relative min-h-20 min-w-24 rounded-lg border border-gray-100/50 bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:shadow-sm dark:border-gray-700/50 dark:bg-gray-800/90 dark:hover:bg-gray-800"
-                draggable
-                onDragStart={(e) => handleDragStart(e, favorite)}
-                onDragEnter={(e) => handleDragEnter(e, favorite)}
-                onDragLeave={handleDragLeave}
-                onDragEnd={handleDragEnd}
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onContextMenu={(e) => handleContextMenu(e, favorite)}
-              >
-                <div className="absolute -top-1 -right-1 z-20 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                  <button
-                    onClick={() => openEditDialog(favorite)}
-                    className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-white transition hover:cursor-pointer hover:bg-blue-600"
-                  >
-                    <span className="text-[8px]">✎</span>
-                  </button>
-                  <button
-                    onClick={() => removeFavorite(favorite.id)}
-                    className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-400 text-white transition hover:cursor-pointer hover:bg-red-600"
-                  >
-                    <X className="h-2.5 w-2.5" />
-                  </button>
-                </div>
-
-                <a
-                  href={favorite.url}
-                  rel="noopener noreferrer"
-                  className="absolute inset-0 flex flex-col items-center justify-center text-center"
-                  draggable={false}
-                  onDragStart={(e) => e.preventDefault()}
-                  tabIndex={-1}
+            {settings.favorites.length > 0 &&
+              settings.favorites.map((favorite) => (
+                <div
+                  key={favorite.id}
+                  className="group relative min-h-20 min-w-24 rounded-lg border border-gray-100/50 bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:shadow-sm dark:border-gray-700/50 dark:bg-gray-800/90 dark:hover:bg-gray-800"
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, favorite)}
+                  onDragEnter={(e) => handleDragEnter(e, favorite)}
+                  onDragLeave={handleDragLeave}
+                  onDragEnd={handleDragEnd}
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onContextMenu={(e) => handleContextMenu(e, favorite)}
                 >
-                  <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
-                    <img
-                      src={
-                        favorite.iconUrl ||
-                        getFaviconUrl(favorite.url) ||
-                        '/placeholder.svg'
-                      }
-                      alt={favorite.name}
-                      className="h-5 w-5"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        const sibling = e.currentTarget
-                          .nextElementSibling as HTMLElement;
-                        if (sibling) sibling.style.display = 'block';
-                      }}
-                      draggable={false}
-                    />
-                    <span
-                      className="text-foreground hidden text-xs font-medium dark:text-gray-300"
-                      style={{ display: 'none' }}
+                  <div className="absolute -top-1 -right-1 z-20 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    <button
+                      onClick={() => openEditDialog(favorite)}
+                      className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-white transition hover:cursor-pointer hover:bg-blue-600"
                     >
-                      {favorite.name.charAt(0).toUpperCase()}
-                    </span>
+                      <span className="text-[8px]">✎</span>
+                    </button>
+                    <button
+                      onClick={() => removeFavorite(favorite.id)}
+                      className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-400 text-white transition hover:cursor-pointer hover:bg-red-600"
+                    >
+                      <X className="h-2.5 w-2.5" />
+                    </button>
                   </div>
-                  <span className="block text-xs leading-tight font-medium text-gray-700 dark:text-gray-200">
-                    {favorite.name}
-                  </span>
-                </a>
-              </div>
-            ))}
+
+                  <a
+                    href={favorite.url}
+                    rel="noopener noreferrer"
+                    className="absolute inset-0 flex flex-col items-center justify-center text-center"
+                    draggable={false}
+                    onDragStart={(e) => e.preventDefault()}
+                    tabIndex={-1}
+                  >
+                    <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
+                      <img
+                        src={
+                          favorite.iconUrl ||
+                          getFaviconUrl(favorite.url) ||
+                          '/placeholder.svg'
+                        }
+                        alt={favorite.name}
+                        className="h-5 w-5"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          const sibling = e.currentTarget
+                            .nextElementSibling as HTMLElement;
+                          if (sibling) sibling.style.display = 'block';
+                        }}
+                        draggable={false}
+                      />
+                      <span
+                        className="text-foreground hidden text-xs font-medium dark:text-gray-300"
+                        style={{ display: 'none' }}
+                      >
+                        {favorite.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <span className="block text-xs leading-tight font-medium text-gray-700 dark:text-gray-200">
+                      {favorite.name}
+                    </span>
+                  </a>
+                </div>
+              ))}
 
             {/* Botão adicionar */}
             <Dialog
@@ -401,8 +402,8 @@ export default function Favorites({ settings, saveSettings }: Props) {
                       type="file"
                       accept="image/*"
                       onChange={handleIconUpload}
-                      className="hidden"
                       id="icon-upload"
+                      hidden
                     />
                     <Button
                       variant="outline"
