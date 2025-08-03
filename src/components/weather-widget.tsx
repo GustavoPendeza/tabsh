@@ -206,9 +206,27 @@ export default function WeatherWidget({ settings }: Props) {
     });
   };
 
+  const getWeatherWidgetBackgroundStyle = () => {
+    // Estes são os componentes OKLCH brutos de --card em globals.css
+    const lightCardOklchComponents = '1 0 0'; // De oklch(1 0 0)
+    const darkCardOklchComponents = '27.8% 0.033 256.848'; // De oklch(27.8% 0.033 256.848)
+
+    const currentOklchComponents =
+      settings.theme === 'dark'
+        ? darkCardOklchComponents
+        : lightCardOklchComponents;
+
+    return {
+      backgroundColor: `oklch(${currentOklchComponents} / ${settings.weatherOpacity})`
+    };
+  };
+
   return (
     <div className="absolute top-6 right-6 z-10">
-      <div className="flex min-h-36 min-w-60 items-center justify-center rounded-lg border border-gray-200/50 bg-white/90 p-4 text-gray-800 shadow-lg backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/90 dark:text-gray-100">
+      <div
+        className="bg-card flex min-h-36 min-w-60 items-center justify-center rounded-lg border border-gray-200/50 p-4 text-gray-800 shadow-lg backdrop-blur-sm dark:border-gray-700/50 dark:text-gray-100"
+        style={getWeatherWidgetBackgroundStyle()}
+      >
         {weatherLoading ? (
           <div className="mx-auto h-6 w-6 animate-spin rounded-full border-b-2 border-current" />
         ) : weather ? (

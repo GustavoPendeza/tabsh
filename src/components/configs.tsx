@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue
 } from './ui/select';
+import { Slider } from './ui/slider';
 import { Switch } from './ui/switch';
 
 interface Props {
@@ -331,6 +332,26 @@ export default function Configs({
                     Insira o nome da cidade. Deixe vazio para usar sua
                     localização atual
                   </p>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label>Opacidade</Label>
+
+                  <div className="flex items-center gap-2">
+                    <Slider
+                      min={0}
+                      max={1}
+                      step={0.05}
+                      value={[settings.weatherOpacity]}
+                      onValueChange={(value) =>
+                        saveSettings({ ...settings, weatherOpacity: value[0] })
+                      }
+                      className="w-full"
+                    />
+                    <span className="w-10 text-right text-sm font-medium">
+                      {Math.round(settings.weatherOpacity * 100)}%
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

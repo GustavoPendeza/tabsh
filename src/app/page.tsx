@@ -4,6 +4,7 @@ import Configs from '@/components/configs';
 import Favorites from '@/components/favorites';
 import WeatherWidget from '@/components/weather-widget';
 import { useEffect, useState } from 'react';
+import Loading from './loading';
 
 const defaultSettings: Settings = {
   theme: 'dark',
@@ -12,6 +13,7 @@ const defaultSettings: Settings = {
   backgroundImage: '',
   weatherLocation: '',
   weather: true,
+  weatherOpacity: 0.9,
   favorites: [
     { id: '1', name: 'Google', url: 'https://google.com' },
     { id: '2', name: 'YouTube', url: 'https://youtube.com' },
@@ -21,6 +23,7 @@ const defaultSettings: Settings = {
 
 export default function HomePage() {
   const [settings, setSettings] = useState(defaultSettings);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const saved = localStorage.getItem('tabsh-settings');
@@ -62,6 +65,15 @@ export default function HomePage() {
         : settings.backgroundColor
     };
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) {
+    return <Loading />;
+  }
 
   return (
     <div className="min-h-screen w-full" style={getBackgroundStyle()}>

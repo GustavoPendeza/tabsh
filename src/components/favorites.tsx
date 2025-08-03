@@ -6,18 +6,19 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog';
-import { Plus, X } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Plus, Upload, X } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { ignoreSubs } from '../../utils/subs';
 import { Button } from './ui/button';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger
+} from './ui/context-menu';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-
-interface ContextMenuState {
-  x: number;
-  y: number;
-  favorite: Favorite;
-}
 
 interface Props {
   settings: Settings;
@@ -29,16 +30,15 @@ export default function Favorites({ settings, saveSettings }: Props) {
   const [newFavorite, setNewFavorite] = useState({ name: '', url: '' });
   const [editingFavorite, setEditingFavorite] = useState<Favorite | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const draggedItem = useRef<Favorite | null>(null);
   const dragOverItem = useRef<Favorite | null>(null);
 
   const addFavorite = () => {
-    if (!newFavorite.name || !newFavorite.url) return;
+    if (!newFavorite.url) return;
 
     const favorite = {
       id: Date.now().toString(),
-      name: newFavorite.name,
+      name: newFavorite.name || '',
       url: newFavorite.url.startsWith('http')
         ? newFavorite.url
         : `https://${newFavorite.url}`
@@ -53,10 +53,48 @@ export default function Favorites({ settings, saveSettings }: Props) {
     setIsAddDialogOpen(false);
   };
 
-  const removeFavorite = (id: string) => {
+  const undoRemoveFavorite = (
+    updatedFavorites: Favorite[],
+    favorite: Favorite
+  ) => {
+    // Adiciona o favorito de volta na posição original
+    const originalIndex = settings.favorites.findIndex(
+      (f) => f.id === favorite.id
+    );
+    const newFavorites = [...updatedFavorites];
+    if (originalIndex >= 0) {
+      newFavorites.splice(originalIndex, 0, favorite);
+    } else {
+      newFavorites.push(favorite);
+    }
+
     saveSettings({
       ...settings,
-      favorites: settings.favorites.filter((f) => f.id !== id)
+      favorites: newFavorites
+    });
+
+    toast.dismiss();
+    toast(`${favorite.name} foi restaurado.`);
+  };
+
+  const removeFavorite = (id: string) => {
+    const favoriteToRemove = settings.favorites.find((f) => f.id === id);
+    if (!favoriteToRemove) return;
+
+    // Remove o favorito do estado imediatamente para feedback visual
+    const updatedFavorites = settings.favorites.filter((f) => f.id !== id);
+    saveSettings({
+      ...settings,
+      favorites: updatedFavorites
+    });
+
+    toast.dismiss();
+    toast(`${favoriteToRemove.name} removido.`, {
+      action: {
+        label: 'Desfazer',
+        onClick: () => undoRemoveFavorite(updatedFavorites, favoriteToRemove)
+      },
+      duration: 5000
     });
   };
 
@@ -66,6 +104,25 @@ export default function Favorites({ settings, saveSettings }: Props) {
       return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
     } catch {
       return null;
+    }
+  };
+
+  const getNameUrl = (url: string) => {
+    try {
+      const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
+      const hostname = urlObj.hostname.replace(/^www\./, '');
+      const parts = hostname.split('.');
+      if (parts.length > 2) {
+        let candidate = parts[parts.length - 2];
+        if (!ignoreSubs.includes(parts[0].toLowerCase())) {
+          candidate = parts[parts.length - 3] || candidate;
+        }
+        return candidate.charAt(0).toUpperCase() + candidate.slice(1);
+      }
+
+      return parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+    } catch {
+      return 'Sem nome';
     }
   };
 
@@ -99,14 +156,13 @@ export default function Favorites({ settings, saveSettings }: Props) {
   };
 
   const editFavorite = () => {
-    if (!editingFavorite || !editingFavorite.name || !editingFavorite.url)
-      return;
+    if (!editingFavorite || !editingFavorite.url) return;
 
     const updatedFavorites = settings.favorites.map((f) =>
       f.id === editingFavorite.id
         ? {
             ...f,
-            name: editingFavorite.name,
+            name: editingFavorite.name || '',
             url: editingFavorite.url.startsWith('http')
               ? editingFavorite.url
               : `https://${editingFavorite.url}`,
@@ -127,7 +183,6 @@ export default function Favorites({ settings, saveSettings }: Props) {
   const openEditDialog = (favorite: Favorite) => {
     setEditingFavorite({ ...favorite });
     setIsEditDialogOpen(true);
-    setContextMenu(null); // Close context menu if open
   };
 
   // Drag and Drop Handlers
@@ -193,31 +248,9 @@ export default function Favorites({ settings, saveSettings }: Props) {
     allFavoriteElements.forEach((el) => el.classList.remove('border-blue-500'));
   };
 
-  const handleContextMenu = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>, favorite: Favorite) => {
-      e.preventDefault();
-      setContextMenu({ x: e.clientX, y: e.clientY, favorite });
-    },
-    []
-  );
-
   const handleRemoveFavoriteFromContext = (id: string) => {
     removeFavorite(id);
-    setContextMenu(null);
   };
-
-  // Close context menu when clicking anywhere else
-  useEffect(() => {
-    const handleClickOutside = () => {
-      setContextMenu(null);
-    };
-    if (contextMenu) {
-      window.addEventListener('click', handleClickOutside);
-    }
-    return () => {
-      window.removeEventListener('click', handleClickOutside);
-    };
-  }, [contextMenu]);
 
   return (
     <>
@@ -226,70 +259,111 @@ export default function Favorites({ settings, saveSettings }: Props) {
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-8">
             {settings.favorites.length > 0 &&
               settings.favorites.map((favorite) => (
-                <div
-                  key={favorite.id}
-                  className="group relative min-h-20 min-w-24 rounded-lg border border-gray-100/50 bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:shadow-sm dark:border-gray-700/50 dark:bg-gray-800/90 dark:hover:bg-gray-800"
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, favorite)}
-                  onDragEnter={(e) => handleDragEnter(e, favorite)}
-                  onDragLeave={handleDragLeave}
-                  onDragEnd={handleDragEnd}
-                  onDrop={handleDrop}
-                  onDragOver={handleDragOver}
-                  onContextMenu={(e) => handleContextMenu(e, favorite)}
-                >
-                  <div className="absolute -top-1 -right-1 z-20 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                    <button
-                      onClick={() => openEditDialog(favorite)}
-                      className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-white transition hover:cursor-pointer hover:bg-blue-600"
+                <ContextMenu key={favorite.id}>
+                  <ContextMenuTrigger>
+                    <div
+                      className="group relative min-h-20 min-w-24 rounded-lg border border-gray-100/50 bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:shadow-sm dark:border-gray-700/50 dark:bg-gray-800/90 dark:hover:bg-gray-800"
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, favorite)}
+                      onDragEnter={(e) => handleDragEnter(e, favorite)}
+                      onDragLeave={handleDragLeave}
+                      onDragEnd={handleDragEnd}
+                      onDrop={handleDrop}
+                      onDragOver={handleDragOver}
                     >
-                      <span className="text-[8px]">✎</span>
-                    </button>
-                    <button
-                      onClick={() => removeFavorite(favorite.id)}
-                      className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-400 text-white transition hover:cursor-pointer hover:bg-red-600"
-                    >
-                      <X className="h-2.5 w-2.5" />
-                    </button>
-                  </div>
+                      <div className="absolute -top-1 -right-1 z-20 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                        <button
+                          onClick={() => openEditDialog(favorite)}
+                          className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-white transition hover:cursor-pointer hover:bg-blue-600"
+                        >
+                          <span className="text-[8px]">✎</span>
+                        </button>
+                        <button
+                          onClick={() => removeFavorite(favorite.id)}
+                          className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-400 text-white transition hover:cursor-pointer hover:bg-red-600"
+                        >
+                          <X className="h-2.5 w-2.5" />
+                        </button>
+                      </div>
 
-                  <a
-                    href={favorite.url}
-                    rel="noopener noreferrer"
-                    className="absolute inset-0 flex flex-col items-center justify-center text-center"
-                    draggable={false}
-                    onDragStart={(e) => e.preventDefault()}
-                    tabIndex={-1}
-                  >
-                    <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
-                      <img
-                        src={
-                          favorite.iconUrl ||
-                          getFaviconUrl(favorite.url) ||
-                          '/placeholder.svg'
-                        }
-                        alt={favorite.name}
-                        className="h-5 w-5"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          const sibling = e.currentTarget
-                            .nextElementSibling as HTMLElement;
-                          if (sibling) sibling.style.display = 'block';
-                        }}
+                      <a
+                        href={favorite.url}
+                        rel="noopener noreferrer"
+                        className="absolute inset-0 flex flex-col items-center justify-center text-center"
                         draggable={false}
-                      />
-                      <span
-                        className="text-foreground hidden text-xs font-medium dark:text-gray-300"
-                        style={{ display: 'none' }}
+                        onDragStart={(e) => e.preventDefault()}
+                        tabIndex={-1}
                       >
-                        {favorite.name.charAt(0).toUpperCase()}
-                      </span>
+                        <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
+                          <img
+                            src={
+                              favorite.iconUrl ||
+                              getFaviconUrl(favorite.url) ||
+                              '/placeholder.svg'
+                            }
+                            alt={favorite.name}
+                            className="h-5 w-5"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const sibling = e.currentTarget
+                                .nextElementSibling as HTMLElement;
+                              if (sibling) sibling.style.display = 'block';
+                            }}
+                            draggable={false}
+                          />
+                          <span
+                            className="text-foreground hidden text-xs font-medium dark:text-gray-300"
+                            style={{ display: 'none' }}
+                          >
+                            {favorite.name.charAt(0).toUpperCase() ||
+                              getNameUrl(favorite.url)}
+                          </span>
+                        </div>
+                        <span className="block text-xs leading-tight font-medium text-gray-700 dark:text-gray-200">
+                          {favorite.name.trim() || getNameUrl(favorite.url)}
+                        </span>
+                      </a>
                     </div>
-                    <span className="block text-xs leading-tight font-medium text-gray-700 dark:text-gray-200">
-                      {favorite.name}
-                    </span>
-                  </a>
-                </div>
+                  </ContextMenuTrigger>
+
+                  {/** Context Menu for Favorites */}
+                  <ContextMenuContent>
+                    <ContextMenuItem
+                      onClick={() => {
+                        if (favorite) {
+                          window.open(
+                            favorite.url,
+                            '_blank',
+                            'noopener,noreferrer'
+                          );
+                        }
+                      }}
+                    >
+                      Abrir link em uma nova guia
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                      onClick={() => {
+                        if (favorite) {
+                          navigator.clipboard.writeText(favorite.url);
+                          toast.success('URL copiada!');
+                        }
+                      }}
+                    >
+                      Copiar URL
+                    </ContextMenuItem>
+                    <ContextMenuItem onClick={() => openEditDialog(favorite)}>
+                      Editar
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                      className="bg-destructive/30 focus:bg-destructive/20 text-destructive focus:text-destructive"
+                      onClick={() =>
+                        handleRemoveFavoriteFromContext(favorite.id)
+                      }
+                    >
+                      Excluir
+                    </ContextMenuItem>
+                  </ContextMenuContent>
+                </ContextMenu>
               ))}
 
             {/* Botão adicionar */}
@@ -314,6 +388,18 @@ export default function Favorites({ settings, saveSettings }: Props) {
 
                 <div className="space-y-4">
                   <div className="space-y-2">
+                    <Label className="text-foreground text-sm">URL*</Label>
+                    <Input
+                      value={newFavorite.url}
+                      onChange={(e) =>
+                        setNewFavorite({ ...newFavorite, url: e.target.value })
+                      }
+                      placeholder="google.com"
+                      className="text-sm"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
                     <Label className="text-foreground text-sm">Nome</Label>
                     <Input
                       value={newFavorite.name}
@@ -323,18 +409,10 @@ export default function Favorites({ settings, saveSettings }: Props) {
                       placeholder="Google"
                       className="text-sm"
                     />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-foreground text-sm">URL</Label>
-                    <Input
-                      value={newFavorite.url}
-                      onChange={(e) =>
-                        setNewFavorite({ ...newFavorite, url: e.target.value })
-                      }
-                      placeholder="google.com"
-                      className="text-sm"
-                    />
+                    <p className="text-muted-foreground text-xs">
+                      Deixe vazio para usar o nome automático do site. Pode não
+                      funcionar direito em todos os casos.
+                    </p>
                   </div>
 
                   <Button
@@ -357,6 +435,42 @@ export default function Favorites({ settings, saveSettings }: Props) {
 
                 <div className="space-y-4">
                   <div className="space-y-2">
+                    <Label className="text-foreground text-sm">URL*</Label>
+                    <Input
+                      value={editingFavorite?.url || ''}
+                      onChange={(e) =>
+                        setEditingFavorite(
+                          editingFavorite
+                            ? { ...editingFavorite, url: e.target.value }
+                            : null
+                        )
+                      }
+                      placeholder="google.com"
+                      className="text-sm"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-foreground text-sm">Nome</Label>
+                    <Input
+                      value={editingFavorite?.name || ''}
+                      onChange={(e) =>
+                        setEditingFavorite(
+                          editingFavorite
+                            ? { ...editingFavorite, name: e.target.value }
+                            : null
+                        )
+                      }
+                      placeholder="Google"
+                      className="text-sm"
+                    />
+                    <p className="text-muted-foreground text-xs">
+                      Deixe vazio para usar o nome automático do site. Pode não
+                      funcionar direito em todos os casos.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
                     <Label className="text-foreground text-sm">
                       Ícone personalizado (URL)
                     </Label>
@@ -371,8 +485,19 @@ export default function Favorites({ settings, saveSettings }: Props) {
                           )
                         }
                         placeholder="https://exemplo.com/favicon.png"
-                        className="flex-1 text-sm"
+                        className="flex-2 text-sm"
                       />
+
+                      <Button
+                        variant="outline"
+                        onClick={() =>
+                          document.getElementById('icon-upload')?.click()
+                        }
+                        size="icon"
+                      >
+                        <Upload className="h-4 w-4" />
+                      </Button>
+
                       <div className="flex h-8 w-8 items-center justify-center rounded border bg-gray-100">
                         {editingFavorite?.iconUrl ? (
                           <img
@@ -392,59 +517,12 @@ export default function Favorites({ settings, saveSettings }: Props) {
                       Deixe vazio para usar o favicon automático do site.
                     </p>
 
-                    <Label
-                      htmlFor="icon-upload"
-                      className="text-foreground text-sm"
-                    >
-                      Ícone personalizado (Upload)
-                    </Label>
                     <Input
                       type="file"
                       accept="image/*"
                       onChange={handleIconUpload}
                       id="icon-upload"
                       hidden
-                    />
-                    <Button
-                      variant="outline"
-                      onClick={() =>
-                        document.getElementById('icon-upload')?.click()
-                      }
-                      className="w-full"
-                    >
-                      Carregar ícone
-                    </Button>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-foreground text-sm">Nome</Label>
-                    <Input
-                      value={editingFavorite?.name || ''}
-                      onChange={(e) =>
-                        setEditingFavorite(
-                          editingFavorite
-                            ? { ...editingFavorite, name: e.target.value }
-                            : null
-                        )
-                      }
-                      placeholder="Google"
-                      className="text-sm"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-foreground text-sm">URL</Label>
-                    <Input
-                      value={editingFavorite?.url || ''}
-                      onChange={(e) =>
-                        setEditingFavorite(
-                          editingFavorite
-                            ? { ...editingFavorite, url: e.target.value }
-                            : null
-                        )
-                      }
-                      placeholder="google.com"
-                      className="text-sm"
                     />
                   </div>
 
@@ -466,57 +544,6 @@ export default function Favorites({ settings, saveSettings }: Props) {
           </div>
         </div>
       </div>
-
-      {/* Menu de Contexto Personalizado */}
-      {contextMenu && (
-        <div
-          className="absolute z-50 overflow-hidden rounded-md border bg-white text-gray-800 shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-          style={{ top: contextMenu.y, left: contextMenu.x }}
-          onClick={(e) => e.stopPropagation()} // Evita que o clique no menu feche-o imediatamente
-        >
-          <button
-            className="block w-full px-4 py-2 text-left text-sm hover:cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-            onClick={() => {
-              if (contextMenu.favorite) {
-                window.open(
-                  contextMenu.favorite.url,
-                  '_blank',
-                  'noopener,noreferrer'
-                );
-              }
-              setContextMenu(null);
-            }}
-          >
-            Abrir link em uma nova guia
-          </button>
-          <button
-            className="block w-full px-4 py-2 text-left text-sm hover:cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-            onClick={() => {
-              if (contextMenu.favorite) {
-                navigator.clipboard.writeText(contextMenu.favorite.url);
-                toast.success('URL copiada!');
-              }
-              setContextMenu(null);
-            }}
-          >
-            Copiar URL
-          </button>
-          <button
-            className="block w-full px-4 py-2 text-left text-sm hover:cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-            onClick={() => openEditDialog(contextMenu.favorite)}
-          >
-            Editar
-          </button>
-          <button
-            className="block w-full bg-red-800 px-4 py-2 text-left text-sm text-white hover:cursor-pointer hover:bg-red-700"
-            onClick={() =>
-              handleRemoveFavoriteFromContext(contextMenu.favorite.id)
-            }
-          >
-            Excluir
-          </button>
-        </div>
-      )}
     </>
   );
 }

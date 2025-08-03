@@ -21,5 +21,6 @@ type Settings = {
   backgroundImage: string;
   weatherLocation: string;
   weather: boolean;
+  weatherOpacity: number;
   favorites: Favorite[];
 };
