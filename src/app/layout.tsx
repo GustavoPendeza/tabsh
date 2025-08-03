@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ThemeProvider } from 'next-themes';
 import { Inter } from 'next/font/google';
 import type React from 'react';
 import { Toaster } from 'sonner';
@@ -19,8 +20,10 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <body className={inter.className}>
-        <main>{children}</main>
-        <Toaster position="bottom-center" richColors />
+        <ThemeProvider attribute="class" defaultTheme="dark">
+          <main>{children}</main>
+          <Toaster position="bottom-center" richColors />
+        </ThemeProvider>
       </body>
     </html>
   );
