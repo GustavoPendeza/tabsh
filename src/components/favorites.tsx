@@ -255,14 +255,14 @@ export default function Favorites({ settings, saveSettings }: Props) {
   return (
     <>
       <div className="relative flex min-h-screen items-center justify-center p-6">
-        <div className="w-full max-w-4xl">
+        <div className="w-full max-w-5xl">
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-8">
             {settings.favorites.length > 0 &&
               settings.favorites.map((favorite) => (
                 <ContextMenu key={favorite.id}>
                   <ContextMenuTrigger>
                     <div
-                      className="group relative min-h-20 min-w-24 rounded-lg border border-gray-100/50 bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:shadow-sm dark:border-gray-700/50 dark:bg-gray-800/90 dark:hover:bg-gray-800"
+                      className="group relative min-h-24 min-w-28 rounded-lg border border-gray-100/50 bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:shadow-sm dark:border-gray-700/50 dark:bg-gray-800/90 dark:hover:bg-gray-800"
                       draggable
                       onDragStart={(e) => handleDragStart(e, favorite)}
                       onDragEnter={(e) => handleDragEnter(e, favorite)}
@@ -289,12 +289,12 @@ export default function Favorites({ settings, saveSettings }: Props) {
                       <a
                         href={favorite.url}
                         rel="noopener noreferrer"
-                        className="absolute inset-0 flex flex-col items-center justify-center text-center"
+                        className="absolute inset-0 flex flex-col items-center justify-center rounded-lg overflow-hidden gap-y-1.5 text-center"
                         draggable={false}
                         onDragStart={(e) => e.preventDefault()}
                         tabIndex={-1}
                       >
-                        <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
+                        <div className="mx-auto flex h-full w-full items-center justify-center bg-gray-100 dark:bg-gray-700">
                           <img
                             src={
                               favorite.iconUrl ||
@@ -302,7 +302,7 @@ export default function Favorites({ settings, saveSettings }: Props) {
                               '/placeholder.svg'
                             }
                             alt={favorite.name}
-                            className="h-5 w-5"
+                            className="h-8 w-8"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
                               const sibling = e.currentTarget
@@ -319,7 +319,12 @@ export default function Favorites({ settings, saveSettings }: Props) {
                               getNameUrl(favorite.url)}
                           </span>
                         </div>
-                        <span className="block text-xs leading-tight font-medium text-gray-700 dark:text-gray-200">
+                        <span
+                          className="block w-full overflow-hidden px-2 pb-2.5 text-xs leading-tight font-medium text-nowrap text-ellipsis text-gray-700 dark:text-gray-200"
+                          title={
+                            favorite.name.trim() || getNameUrl(favorite.url)
+                          }
+                        >
                           {favorite.name.trim() || getNameUrl(favorite.url)}
                         </span>
                       </a>
@@ -375,10 +380,13 @@ export default function Favorites({ settings, saveSettings }: Props) {
               }}
             >
               <DialogTrigger asChild>
-                <Button className="flex min-h-[80px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-200/60 bg-gray-50/80 text-gray-500 backdrop-blur-sm transition-colors hover:bg-gray-100/80 dark:border-gray-600/60 dark:bg-gray-800/80 dark:text-gray-400 dark:hover:bg-gray-700/80">
-                  <Plus className="mb-1 h-5 w-5" />
-                  <span className="text-xs">Adicionar</span>
-                </Button>
+                <button
+                  type="button"
+                  className="flex min-h-24 min-w-28 cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-gray-200/60 bg-gray-50/80 text-gray-500 backdrop-blur-sm transition-colors hover:bg-gray-100/80 dark:border-gray-600/60 dark:bg-gray-800/80 dark:text-gray-400 dark:hover:bg-gray-700/80"
+                >
+                  <Plus size={22} />
+                  <span className="text-sm">Adicionar</span>
+                </button>
               </DialogTrigger>
 
               <DialogContent className="max-w-sm">

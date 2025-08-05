@@ -199,11 +199,16 @@ export default function WeatherWidget({ settings }: Props) {
   };
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('pt-BR', {
+    const formattedDate = date.toLocaleDateString('pt-BR', {
       weekday: 'long',
       day: 'numeric',
       month: 'long'
     });
+
+    const returnDate =
+      formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+
+    return returnDate;
   };
 
   const getWeatherWidgetBackgroundStyle = () => {
@@ -230,8 +235,8 @@ export default function WeatherWidget({ settings }: Props) {
         {weatherLoading ? (
           <div className="mx-auto h-6 w-6 animate-spin rounded-full border-b-2 border-current" />
         ) : weather ? (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
+          <div className="w-full">
+            <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
                 {getWeatherIcon(weather.condition)}
                 <span className="text-2xl font-bold">
@@ -239,10 +244,10 @@ export default function WeatherWidget({ settings }: Props) {
                 </span>
               </div>
               <div className="text-right">
-                <div className="text-lg font-semibold">
+                <div className="text-2xl font-semibold">
                   {formatTime(currentTime)}
                 </div>
-                <div className="text-xs opacity-75">
+                <div className="text-xs opacity-75 w-22">
                   {formatDate(currentTime)}
                 </div>
               </div>
