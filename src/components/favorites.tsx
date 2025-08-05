@@ -289,7 +289,7 @@ export default function Favorites({ settings, saveSettings }: Props) {
                       <a
                         href={favorite.url}
                         rel="noopener noreferrer"
-                        className="absolute inset-0 flex flex-col items-center justify-center rounded-lg overflow-hidden gap-y-1.5 text-center"
+                        className="absolute inset-0 flex flex-col items-center justify-center gap-y-1.5 overflow-hidden rounded-lg text-center"
                         draggable={false}
                         onDragStart={(e) => e.preventDefault()}
                         tabIndex={-1}
@@ -506,18 +506,18 @@ export default function Favorites({ settings, saveSettings }: Props) {
                         <Upload className="h-4 w-4" />
                       </Button>
 
-                      <div className="flex h-8 w-8 items-center justify-center rounded border bg-gray-100">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-md border bg-gray-100 dark:bg-gray-700">
                         {editingFavorite?.iconUrl ? (
                           <img
                             src={editingFavorite.iconUrl}
                             alt="Prévia do ícone"
-                            className="h-5 w-5"
+                            className="h-6 w-6"
                             onError={(e) =>
                               (e.currentTarget.style.display = 'none')
                             }
                           />
                         ) : (
-                          <span className="text-xs text-gray-400">?</span>
+                          <span className="text-base text-gray-400">?</span>
                         )}
                       </div>
                     </div>
