@@ -74,7 +74,9 @@ export default function Favorites({ settings, saveSettings }: Props) {
     });
 
     toast.dismiss();
-    toast(`${favorite.name} foi restaurado.`);
+    console.log(favorite);
+
+    toast(`${favorite.name || getNameUrl(favorite.url)} foi restaurado.`);
   };
 
   const removeFavorite = (id: string) => {
@@ -89,13 +91,16 @@ export default function Favorites({ settings, saveSettings }: Props) {
     });
 
     toast.dismiss();
-    toast(`${favoriteToRemove.name} removido.`, {
-      action: {
-        label: 'Desfazer',
-        onClick: () => undoRemoveFavorite(updatedFavorites, favoriteToRemove)
-      },
-      duration: 5000
-    });
+    toast(
+      `${favoriteToRemove.name || getNameUrl(favoriteToRemove.url)} removido.`,
+      {
+        action: {
+          label: 'Desfazer',
+          onClick: () => undoRemoveFavorite(updatedFavorites, favoriteToRemove)
+        },
+        duration: 5000
+      }
+    );
   };
 
   const getFaviconUrl = (url: string) => {
@@ -517,7 +522,21 @@ export default function Favorites({ settings, saveSettings }: Props) {
                             }
                           />
                         ) : (
-                          <span className="text-base text-gray-400">?</span>
+                          <img
+                            src={
+                              getFaviconUrl(editingFavorite?.url || '') ||
+                              '/placeholder.svg'
+                            }
+                            alt={editingFavorite?.name}
+                            className="h-6 w-6"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const sibling = e.currentTarget
+                                .nextElementSibling as HTMLElement;
+                              if (sibling) sibling.style.display = 'block';
+                            }}
+                            draggable={false}
+                          />
                         )}
                       </div>
                     </div>
