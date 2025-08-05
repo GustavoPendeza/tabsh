@@ -247,8 +247,9 @@ export default function WeatherWidget({ settings }: Props) {
                 <div className="text-2xl font-semibold">
                   {formatTime(currentTime)}
                 </div>
-                <div className="text-xs opacity-75 w-22">
-                  {formatDate(currentTime)}
+                <div className="flex flex-col text-xs opacity-75">
+                  <span>{formatDate(currentTime).split(',')[0]}</span>
+                  <span>{formatDate(currentTime).split(',')[1]}</span>
                 </div>
               </div>
             </div>
