@@ -12,8 +12,9 @@ import {
   Copy,
   Edit,
   Link,
+  Pencil,
   Plus,
-  SquareArrowUpRight,
+  SquareArrowOutUpRight,
   Trash,
   Upload,
   X
@@ -292,7 +293,9 @@ export default function Favorites({ settings, saveSettings }: Props) {
                           onClick={() => openEditDialog(favorite)}
                           className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-white transition hover:cursor-pointer hover:bg-blue-600"
                         >
-                          <span className="text-[8px]">✎</span>
+                          <span className="text-[8px]">
+                            <Pencil className="h-2.5 w-2.5" />
+                          </span>
                         </button>
                         <button
                           onClick={() => removeFavorite(favorite.id)}
@@ -361,7 +364,7 @@ export default function Favorites({ settings, saveSettings }: Props) {
                         }
                       }}
                     >
-                      <SquareArrowUpRight size={16} /> Abrir link em uma nova
+                      <SquareArrowOutUpRight size={16} /> Abrir link em uma nova
                       guia
                     </ContextMenuItem>
                     <ContextMenuItem
