@@ -208,7 +208,7 @@ export default function Configs({
     <div className="fixed right-6 bottom-6 z-10">
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
         <DialogTrigger asChild>
-          <button className="rounded-full bg-white/80 p-3 text-gray-500 shadow-lg backdrop-blur-sm transition-colors hover:bg-white/90 hover:text-gray-700 dark:bg-gray-800/80 dark:text-gray-300 dark:hover:bg-gray-800/90 dark:hover:text-white">
+          <button className="cursor-pointer rounded-full bg-white/80 p-3 text-gray-500 shadow-lg backdrop-blur-sm transition-colors hover:bg-white/90 hover:text-gray-700 dark:bg-gray-800/80 dark:text-gray-300 dark:hover:bg-gray-800/90 dark:hover:text-white">
             <Settings className="h-5 w-5" />
           </button>
         </DialogTrigger>
@@ -282,7 +282,7 @@ export default function Configs({
                       document.getElementById('import-file')?.click()
                     }
                     variant="outline"
-                    className="flex-1 text-sm"
+                    className="flex-1 cursor-pointer text-sm"
                   >
                     <Upload className="mr-2 h-4 w-4" />
                     Importar
@@ -291,7 +291,7 @@ export default function Configs({
                   <Button
                     onClick={() => exportSettings(dataScope)}
                     variant="outline"
-                    className="flex-1 text-sm"
+                    className="flex-1 cursor-pointer text-sm"
                   >
                     <Download className="mr-2 h-4 w-4" />
                     Exportar
@@ -367,7 +367,7 @@ export default function Configs({
                   onClick={() =>
                     saveSettings({ ...settings, backgroundType: 'color' })
                   }
-                  className="flex-1"
+                  className="flex-1 cursor-pointer"
                 >
                   <Palette className="mr-1 h-4 w-4" />
                   Cor
@@ -380,7 +380,7 @@ export default function Configs({
                   onClick={() =>
                     saveSettings({ ...settings, backgroundType: 'image' })
                   }
-                  className="flex-1"
+                  className="flex-1 cursor-pointer"
                 >
                   <ImageIcon className="mr-1 h-4 w-4" />
                   Imagem
@@ -397,6 +397,7 @@ export default function Configs({
                   </Label>
                   <div className="flex items-center gap-2">
                     <Input
+                      className="cursor-pointer"
                       type="color"
                       value={settings.backgroundColor}
                       onChange={(e) =>
@@ -408,6 +409,7 @@ export default function Configs({
                       id="color-input"
                     />
                     <Button
+                      className="cursor-pointer"
                       variant="outline"
                       onClick={handleResetBackgroundColor}
                     >
@@ -464,6 +466,7 @@ export default function Configs({
                     />
 
                     <Button
+                      className="cursor-pointer"
                       variant="outline"
                       onClick={handleResetBackgroundImage}
                     >
@@ -485,7 +488,7 @@ export default function Configs({
                     hidden
                   />
                   <Button
-                    className="w-full"
+                    className="w-full cursor-pointer"
                     variant="outline"
                     onClick={() =>
                       document.getElementById('image-upload')?.click()
@@ -518,13 +521,18 @@ export default function Configs({
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <Button variant="outline" size="icon">
+                  <Button
+                    className="cursor-pointer"
+                    variant="outline"
+                    size="icon"
+                  >
                     <Github className="h-4 w-4" />
                   </Button>
                 </a>
               </div>
 
               <Button
+                className="cursor-pointer"
                 variant="outline"
                 size="icon"
                 onClick={() =>

@@ -6,7 +6,18 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog';
-import { Plus, Upload, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+  CircleAlert,
+  Copy,
+  Edit,
+  Link,
+  Plus,
+  SquareArrowUpRight,
+  Trash,
+  Upload,
+  X
+} from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { ignoreSubs } from '../../utils/subs';
@@ -261,7 +272,7 @@ export default function Favorites({ settings, saveSettings }: Props) {
     <>
       <div className="relative flex min-h-screen items-center justify-center p-6">
         <div className="w-full max-w-5xl">
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-8">
+          <div className="grid grid-cols-3 gap-3 md:grid-cols-8">
             {settings.favorites.length > 0 &&
               settings.favorites.map((favorite) => (
                 <ContextMenu key={favorite.id}>
@@ -339,6 +350,7 @@ export default function Favorites({ settings, saveSettings }: Props) {
                   {/** Context Menu for Favorites */}
                   <ContextMenuContent>
                     <ContextMenuItem
+                      className="cursor-pointer"
                       onClick={() => {
                         if (favorite) {
                           window.open(
@@ -349,9 +361,11 @@ export default function Favorites({ settings, saveSettings }: Props) {
                         }
                       }}
                     >
-                      Abrir link em uma nova guia
+                      <SquareArrowUpRight size={16} /> Abrir link em uma nova
+                      guia
                     </ContextMenuItem>
                     <ContextMenuItem
+                      className="cursor-pointer"
                       onClick={() => {
                         if (favorite) {
                           navigator.clipboard.writeText(favorite.url);
@@ -359,18 +373,22 @@ export default function Favorites({ settings, saveSettings }: Props) {
                         }
                       }}
                     >
-                      Copiar URL
-                    </ContextMenuItem>
-                    <ContextMenuItem onClick={() => openEditDialog(favorite)}>
-                      Editar
+                      <Copy size={16} /> Copiar URL
                     </ContextMenuItem>
                     <ContextMenuItem
-                      className="bg-destructive/30 focus:bg-destructive/20 text-destructive focus:text-destructive"
+                      className="cursor-pointer"
+                      onClick={() => openEditDialog(favorite)}
+                    >
+                      <Edit size={16} /> Editar
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                      variant="destructive"
+                      className="cursor-pointer"
                       onClick={() =>
                         handleRemoveFavoriteFromContext(favorite.id)
                       }
                     >
-                      Excluir
+                      <Trash size={16} /> Excluir
                     </ContextMenuItem>
                   </ContextMenuContent>
                 </ContextMenu>
@@ -387,7 +405,11 @@ export default function Favorites({ settings, saveSettings }: Props) {
               <DialogTrigger asChild>
                 <button
                   type="button"
-                  className="flex min-h-24 min-w-28 cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-gray-200/60 bg-gray-50/80 text-gray-500 backdrop-blur-sm transition-colors hover:bg-gray-100/80 dark:border-gray-600/60 dark:bg-gray-800/80 dark:text-gray-400 dark:hover:bg-gray-700/80"
+                  className={cn(
+                    settings.favorites.length > 0
+                      ? 'flex min-h-24 min-w-28 cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-gray-200/60 bg-gray-50/80 text-gray-500 backdrop-blur-sm transition-colors hover:bg-gray-100/80 dark:border-gray-600/60 dark:bg-gray-800/80 dark:text-gray-400 dark:hover:bg-gray-700/80'
+                      : 'hidden'
+                  )}
                 >
                   <Plus size={22} />
                   <span className="text-sm">Adicionar</span>
@@ -396,7 +418,9 @@ export default function Favorites({ settings, saveSettings }: Props) {
 
               <DialogContent className="max-w-sm">
                 <DialogHeader>
-                  <DialogTitle className="text-lg">Novo site</DialogTitle>
+                  <DialogTitle className="flex items-center gap-2 text-lg">
+                    <Link size={16} /> Novo site
+                  </DialogTitle>
                 </DialogHeader>
 
                 <div className="space-y-4">
@@ -431,7 +455,7 @@ export default function Favorites({ settings, saveSettings }: Props) {
                   <Button
                     type="submit"
                     onClick={addFavorite}
-                    className="w-full"
+                    className="w-full cursor-pointer"
                   >
                     Adicionar
                   </Button>
@@ -443,7 +467,9 @@ export default function Favorites({ settings, saveSettings }: Props) {
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
               <DialogContent className="max-w-sm">
                 <DialogHeader>
-                  <DialogTitle className="text-lg">Editar site</DialogTitle>
+                  <DialogTitle className="flex items-center gap-2 text-lg">
+                    <Edit size={16} /> Editar site
+                  </DialogTitle>
                 </DialogHeader>
 
                 <div className="space-y-4">
@@ -502,6 +528,7 @@ export default function Favorites({ settings, saveSettings }: Props) {
                       />
 
                       <Button
+                        className="cursor-pointer"
                         variant="outline"
                         onClick={() =>
                           document.getElementById('icon-upload')?.click()
@@ -554,13 +581,16 @@ export default function Favorites({ settings, saveSettings }: Props) {
                   </div>
 
                   <div className="flex gap-2">
-                    <Button onClick={editFavorite} className="flex-1">
+                    <Button
+                      onClick={editFavorite}
+                      className="flex-1 cursor-pointer"
+                    >
                       Salvar
                     </Button>
                     <Button
                       variant="outline"
                       onClick={() => setIsEditDialogOpen(false)}
-                      className="flex-1"
+                      className="flex-1 cursor-pointer"
                     >
                       Cancelar
                     </Button>
@@ -570,6 +600,31 @@ export default function Favorites({ settings, saveSettings }: Props) {
             </Dialog>
           </div>
         </div>
+
+        {settings.favorites.length === 0 && (
+          <div className="fixed right-6 bottom-20 z-10">
+            <button
+              className="relative cursor-pointer rounded-full bg-white/80 p-3 text-gray-500 shadow-lg backdrop-blur-sm transition-colors hover:bg-white/90 hover:text-gray-700 dark:bg-gray-800/80 dark:text-gray-300 dark:hover:bg-gray-800/90 dark:hover:text-white"
+              type="button"
+              onClick={() => {
+                setIsAddDialogOpen(true);
+                if (settings.showAddFirstUrlAlert) {
+                  saveSettings({ ...settings, showAddFirstUrlAlert: false });
+                }
+              }}
+            >
+              {settings.showAddFirstUrlAlert && (
+                <span
+                  className="absolute right-0 bottom-7 animate-bounce text-yellow-400"
+                  style={{ animationDuration: '1s' }}
+                >
+                  <CircleAlert size={24} />
+                </span>
+              )}
+              <Plus className="h-5 w-5" />
+            </button>
+          </div>
+        )}
       </div>
     </>
   );

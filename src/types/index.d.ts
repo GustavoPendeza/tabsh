@@ -22,5 +22,6 @@ type Settings = {
   weatherLocation: string;
   weather: boolean;
   weatherOpacity: number;
+  showAddFirstUrlAlert: boolean;
   favorites: Favorite[];
 };

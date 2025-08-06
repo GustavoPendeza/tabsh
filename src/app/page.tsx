@@ -14,6 +14,7 @@ const defaultSettings: Settings = {
   weatherLocation: '',
   weather: true,
   weatherOpacity: 0.9,
+  showAddFirstUrlAlert: true,
   favorites: [
     { id: '1', name: 'Google', url: 'https://google.com' },
     { id: '2', name: 'YouTube', url: 'https://youtube.com' },
