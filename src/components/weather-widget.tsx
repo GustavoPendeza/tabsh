@@ -123,9 +123,16 @@ export default function WeatherWidget({ settings }: Props) {
   };
 
   const getWeatherData = async (lat: number, lon: number) => {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
-    const res = await fetch(url);
-    const data = await res.json();
+    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+    const geoUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=pt`;
+
+    const [weatherRes, geoRes, humidity] = await Promise.all([
+      fetch(weatherUrl),
+      fetch(geoUrl).catch(() => null),
+      fetchWeatherHumidity(lat.toString(), lon.toString())
+    ]);
+
+    const data = await weatherRes.json();
     if (!data.current_weather) throw new Error('Clima não encontrado');
 
     const temp = Math.round(data.current_weather.temperature);
@@ -139,25 +146,21 @@ export default function WeatherWidget({ settings }: Props) {
     if ([71, 73, 75, 77, 85, 86].includes(code)) condition = 'Neve';
     if ([95, 96, 99].includes(code)) condition = 'Tempestade';
 
-    // Busca reversa para nome da cidade (opcional)
     let locationName = 'Sua localização';
     try {
-      const geoRes = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=pt`
-      );
-      const geoData = await geoRes.json();
-      locationName =
-        geoData.address?.city ||
-        geoData.address?.town ||
-        geoData.address?.village ||
-        geoData.address?.state ||
-        'Sua localização';
+      if (geoRes) {
+        const geoData = await geoRes.json();
+        locationName =
+          geoData.address?.city ||
+          geoData.address?.town ||
+          geoData.address?.village ||
+          geoData.address?.state ||
+          'Sua localização';
+      }
     } catch {
       console.error('Erro ao obter localização por coordenadas.');
       toast.error('Erro ao obter localização por coordenadas.');
     }
-
-    const humidity = await fetchWeatherHumidity(lat.toString(), lon.toString());
 
     const weatherData: WeatherData = {
       temperature: temp,
@@ -248,8 +251,11 @@ export default function WeatherWidget({ settings }: Props) {
                   {formatTime(currentTime)}
                 </div>
                 <div className="flex flex-col text-xs opacity-75">
-                  <span>{formatDate(currentTime).split(',')[0]}</span>
-                  <span>{formatDate(currentTime).split(',')[1]}</span>
+                  {formatDate(currentTime)
+                    .split(',')
+                    .map((part, i) => (
+                      <span key={i}>{part}</span>
+                    ))}
                 </div>
               </div>
             </div>

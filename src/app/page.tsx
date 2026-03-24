@@ -79,12 +79,12 @@ export default function HomePage() {
   return (
     <div className="min-h-screen w-full" style={getBackgroundStyle()}>
       {/* Overlay para melhor legibilidade quando há imagem de fundo */}
-      {settings.backgroundType === 'image' && settings.backgroundImage && (
+      {settings.backgroundType === 'image' && settings.backgroundImage ? (
         <div className="absolute inset-0 bg-black/10 dark:bg-black/30" />
-      )}
+      ) : null}
 
       {/* Widget do clima */}
-      {settings.weather && <WeatherWidget settings={settings} />}
+      {settings.weather ? <WeatherWidget settings={settings} /> : null}
 
       {/* Botão de configurações */}
       <Configs
