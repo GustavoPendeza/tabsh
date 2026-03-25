@@ -230,27 +230,27 @@ export default function WeatherWidget({ settings }: Props) {
   };
 
   return (
-    <div className="absolute top-6 right-6 z-10">
-      <div
-        className="bg-card flex min-h-40 min-w-60 items-center justify-center rounded-lg border border-gray-200/50 p-4 text-gray-800 shadow-lg backdrop-blur-sm dark:border-gray-700/50 dark:text-gray-100"
+    <div
+        className="bg-card flex w-full items-center justify-center rounded-lg border border-gray-200/50 px-4 py-3 text-gray-800 shadow-lg backdrop-blur-sm sm:min-h-32 sm:w-52 sm:p-3 md:min-h-36 md:w-56 lg:min-h-40 lg:w-60 lg:p-4 dark:border-gray-700/50 dark:text-gray-100"
         style={getWeatherWidgetBackgroundStyle()}
       >
         {weatherLoading ? (
-          <div className="mx-auto h-6 w-6 animate-spin rounded-full border-b-2 border-current" />
+          <div className="mx-auto h-5 w-5 animate-spin rounded-full border-b-2 border-current sm:h-6 sm:w-6" />
         ) : weather ? (
           <div className="w-full">
+            {/* Linha superior: igual em todos os tamanhos */}
             <div className="flex items-start justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 {getWeatherIcon(weather.condition)}
-                <span className="text-2xl font-bold">
+                <span className="text-base font-bold sm:text-lg md:text-xl lg:text-2xl">
                   {weather.temperature}°
                 </span>
               </div>
               <div className="text-right">
-                <div className="text-2xl font-semibold">
+                <div className="text-base font-semibold sm:text-lg md:text-xl lg:text-2xl">
                   {formatTime(currentTime)}
                 </div>
-                <div className="flex flex-col text-xs opacity-75">
+                <div className="flex flex-col text-[10px] opacity-75 sm:text-xs">
                   {formatDate(currentTime)
                     .split(',')
                     .map((part, i) => (
@@ -260,13 +260,28 @@ export default function WeatherWidget({ settings }: Props) {
               </div>
             </div>
 
-            <div className="space-y-1">
-              <div className="flex items-center gap-1 text-xs">
-                <MapPin className="h-3 w-3" />
+            {/* Mobile: linha horizontal com localização, umidade e vento */}
+            <div className="mt-2 flex items-center justify-between gap-2 text-xs sm:hidden">
+              <div className="flex items-center gap-1 truncate">
+                <MapPin className="h-3 w-3 shrink-0" />
                 <span className="truncate">{weather.location}</span>
               </div>
-              <div className="text-xs opacity-75">{weather.condition}</div>
-              <div className="flex justify-between text-xs opacity-75">
+              <div className="flex shrink-0 gap-3 opacity-75">
+                <span>Umidade: {weather.humidity}%</span>
+                <span>Vento: {weather.windSpeed} km/h</span>
+              </div>
+            </div>
+
+            {/* sm+: layout compacto empilhado */}
+            <div className="hidden space-y-0.5 sm:block sm:space-y-1">
+              <div className="flex items-center gap-1 text-[10px] sm:text-xs">
+                <MapPin className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                <span className="truncate">{weather.location}</span>
+              </div>
+              <div className="text-[10px] opacity-75 sm:text-xs">
+                {weather.condition}
+              </div>
+              <div className="flex justify-between text-[10px] opacity-75 sm:text-xs">
                 <span>Umidade: {weather.humidity}%</span>
                 <span>Vento: {weather.windSpeed} km/h</span>
               </div>
@@ -274,11 +289,10 @@ export default function WeatherWidget({ settings }: Props) {
           </div>
         ) : (
           <div className="text-center text-xs opacity-75">
-            <CloudOff className="mx-auto mb-2 h-6 w-6 text-gray-400" />
+            <CloudOff className="mx-auto mb-2 h-5 w-5 text-gray-400 sm:h-6 sm:w-6" />
             Clima indisponível
           </div>
         )}
-      </div>
     </div>
   );
 }

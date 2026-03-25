@@ -205,11 +205,11 @@ export default function Configs({
   };
 
   return (
-    <div className="fixed right-6 bottom-6 z-10">
+    <div className="fixed right-6 bottom-6 z-10 md:right-3 md:bottom-3 lg:right-4 lg:bottom-4 2xl:right-6 2xl:bottom-6">
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
         <DialogTrigger asChild>
-          <button className="cursor-pointer rounded-full bg-white/80 p-3 text-gray-500 shadow-lg backdrop-blur-sm transition-colors hover:bg-white/90 hover:text-gray-700 dark:bg-gray-800/80 dark:text-gray-300 dark:hover:bg-gray-800/90 dark:hover:text-white">
-            <Settings className="h-5 w-5" />
+          <button className="cursor-pointer rounded-full bg-white/80 p-3 text-gray-500 shadow-lg backdrop-blur-sm transition-colors hover:bg-white/90 hover:text-gray-700 md:p-1.5 lg:p-2 2xl:p-3 dark:bg-gray-800/80 dark:text-gray-300 dark:hover:bg-gray-800/90 dark:hover:text-white">
+            <Settings className="h-5 w-5 md:h-3.5 md:w-3.5 lg:h-4 lg:w-4 2xl:h-5 2xl:w-5" />
           </button>
         </DialogTrigger>
         <DialogContent className="max-w-sm">

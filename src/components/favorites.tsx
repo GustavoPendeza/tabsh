@@ -1,36 +1,26 @@
 /* eslint-disable @next/next/no-img-element */
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import {
   CircleAlert,
   Copy,
   Edit,
-  Link,
   Pencil,
   Plus,
   SquareArrowOutUpRight,
   Trash,
-  Upload,
   X
 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { ignoreSubs } from '../../utils/subs';
-import { Button } from './ui/button';
+import { FavoriteFormDialog } from './dialogs/favorite-form-dialog';
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger
 } from './ui/context-menu';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
+import { FavoriteFormSchema } from '@/lib/validations/favorite';
 
 interface Props {
   settings: Settings;
@@ -39,21 +29,16 @@ interface Props {
 
 export default function Favorites({ settings, saveSettings }: Props) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newFavorite, setNewFavorite] = useState({ name: '', url: '' });
   const [editingFavorite, setEditingFavorite] = useState<Favorite | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const draggedItem = useRef<Favorite | null>(null);
   const dragOverItem = useRef<Favorite | null>(null);
 
-  const addFavorite = () => {
-    if (!newFavorite.url) return;
-
+  const addFavorite = (values: FavoriteFormSchema) => {
     const favorite = {
       id: Date.now().toString(),
-      name: newFavorite.name || '',
-      url: newFavorite.url.startsWith('http')
-        ? newFavorite.url
-        : `https://${newFavorite.url}`
+      name: values.name || '',
+      url: values.url.startsWith('http') ? values.url : `https://${values.url}`
     };
 
     saveSettings({
@@ -61,7 +46,6 @@ export default function Favorites({ settings, saveSettings }: Props) {
       favorites: [...settings.favorites, favorite]
     });
 
-    setNewFavorite({ name: '', url: '' });
     setIsAddDialogOpen(false);
   };
 
@@ -143,56 +127,23 @@ export default function Favorites({ settings, saveSettings }: Props) {
     }
   };
 
-  const handleIconUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Verifica o tamanho do arquivo (ex: 2MB = 2 * 1024 * 1024 bytes)
-    const MAX_FILE_SIZE_MB = 2;
-    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      alert(
-        `A imagem é muito grande. O tamanho máximo permitido é ${MAX_FILE_SIZE_MB}MB.`
-      );
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      // reader.result conterá a imagem como uma Data URL (Base64)
-      if (editingFavorite) {
-        setEditingFavorite({
-          ...editingFavorite,
-          iconUrl: typeof reader.result === 'string' ? reader.result : ''
-        });
-      }
-    };
-    reader.onerror = () => {
-      alert('Erro ao ler o arquivo de imagem.');
-    };
-    reader.readAsDataURL(file); // Lê o arquivo como Data URL
-  };
-
-  const editFavorite = () => {
-    if (!editingFavorite || !editingFavorite.url) return;
+  const editFavorite = (values: FavoriteFormSchema) => {
+    if (!editingFavorite) return;
 
     const updatedFavorites = settings.favorites.map((f) =>
       f.id === editingFavorite.id
         ? {
             ...f,
-            name: editingFavorite.name || '',
-            url: editingFavorite.url.startsWith('http')
-              ? editingFavorite.url
-              : `https://${editingFavorite.url}`,
-            iconUrl: editingFavorite.iconUrl || ''
+            name: values.name || '',
+            url: values.url.startsWith('http')
+              ? values.url
+              : `https://${values.url}`,
+            iconUrl: values.iconUrl || ''
           }
         : f
     );
 
-    saveSettings({
-      ...settings,
-      favorites: updatedFavorites
-    });
-
+    saveSettings({ ...settings, favorites: updatedFavorites });
     setEditingFavorite(null);
     setIsEditDialogOpen(false);
   };
@@ -271,9 +222,9 @@ export default function Favorites({ settings, saveSettings }: Props) {
 
   return (
     <>
-      <div className="relative flex min-h-screen items-center justify-center p-6">
+      <div className="relative flex flex-1 items-center justify-center p-6 2xl:min-h-screen">
         <div className="w-full max-w-5xl">
-          <div className="grid grid-cols-3 gap-3 md:grid-cols-8">
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 2xl:grid-cols-8">
             {settings.favorites.length > 0 &&
               settings.favorites.map((favorite) => (
                 <ContextMenu key={favorite.id}>
@@ -398,209 +349,38 @@ export default function Favorites({ settings, saveSettings }: Props) {
               ))}
 
             {/* Botão adicionar */}
-            <Dialog
-              open={isAddDialogOpen}
-              onOpenChange={() => {
-                setIsAddDialogOpen(!isAddDialogOpen);
-                setNewFavorite({ name: '', url: '' }); // TODO: Verificar se é necessário limpar o estado aqui
-              }}
+            <button
+              type="button"
+              onClick={() => setIsAddDialogOpen(true)}
+              className={cn(
+                settings.favorites.length > 0
+                  ? 'flex min-h-24 min-w-28 cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-gray-200/60 bg-gray-50/80 text-gray-500 backdrop-blur-sm transition-colors hover:bg-gray-100/80 dark:border-gray-600/60 dark:bg-gray-800/80 dark:text-gray-400 dark:hover:bg-gray-700/80'
+                  : 'hidden'
+              )}
             >
-              <DialogTrigger asChild>
-                <button
-                  type="button"
-                  className={cn(
-                    settings.favorites.length > 0
-                      ? 'flex min-h-24 min-w-28 cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-gray-200/60 bg-gray-50/80 text-gray-500 backdrop-blur-sm transition-colors hover:bg-gray-100/80 dark:border-gray-600/60 dark:bg-gray-800/80 dark:text-gray-400 dark:hover:bg-gray-700/80'
-                      : 'hidden'
-                  )}
-                >
-                  <Plus size={22} />
-                  <span className="text-sm">Adicionar</span>
-                </button>
-              </DialogTrigger>
+              <Plus size={22} />
+              <span className="text-sm">Adicionar</span>
+            </button>
 
-              <DialogContent className="max-w-sm">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2 text-lg">
-                    <Link size={16} /> Novo site
-                  </DialogTitle>
-                </DialogHeader>
+            <FavoriteFormDialog
+              open={isAddDialogOpen}
+              onOpenChange={setIsAddDialogOpen}
+              mode="add"
+              onSubmit={addFavorite}
+            />
 
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-foreground text-sm">URL*</Label>
-                    <Input
-                      value={newFavorite.url}
-                      onChange={(e) =>
-                        setNewFavorite({ ...newFavorite, url: e.target.value })
-                      }
-                      placeholder="google.com"
-                      className="text-sm"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-foreground text-sm">Nome</Label>
-                    <Input
-                      value={newFavorite.name}
-                      onChange={(e) =>
-                        setNewFavorite({ ...newFavorite, name: e.target.value })
-                      }
-                      placeholder="Google"
-                      className="text-sm"
-                    />
-                    <p className="text-muted-foreground text-xs">
-                      Deixe vazio para usar o nome automático do site. Pode não
-                      funcionar direito em todos os casos.
-                    </p>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    onClick={addFavorite}
-                    className="w-full cursor-pointer"
-                  >
-                    Adicionar
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-
-            {/* Dialog de edição */}
-            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-              <DialogContent className="max-w-sm">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2 text-lg">
-                    <Edit size={16} /> Editar site
-                  </DialogTitle>
-                </DialogHeader>
-
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-foreground text-sm">URL*</Label>
-                    <Input
-                      value={editingFavorite?.url || ''}
-                      onChange={(e) =>
-                        setEditingFavorite(
-                          editingFavorite
-                            ? { ...editingFavorite, url: e.target.value }
-                            : null
-                        )
-                      }
-                      placeholder="google.com"
-                      className="text-sm"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-foreground text-sm">Nome</Label>
-                    <Input
-                      value={editingFavorite?.name || ''}
-                      onChange={(e) =>
-                        setEditingFavorite(
-                          editingFavorite
-                            ? { ...editingFavorite, name: e.target.value }
-                            : null
-                        )
-                      }
-                      placeholder="Google"
-                      className="text-sm"
-                    />
-                    <p className="text-muted-foreground text-xs">
-                      Deixe vazio para usar o nome automático do site. Pode não
-                      funcionar direito em todos os casos.
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-foreground text-sm">
-                      Ícone personalizado (URL)
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={editingFavorite?.iconUrl || ''}
-                        onChange={(e) =>
-                          setEditingFavorite(
-                            editingFavorite
-                              ? { ...editingFavorite, iconUrl: e.target.value }
-                              : null
-                          )
-                        }
-                        placeholder="https://exemplo.com/favicon.png"
-                        className="flex-2 text-sm"
-                      />
-
-                      <Button
-                        className="cursor-pointer"
-                        variant="outline"
-                        onClick={() =>
-                          document.getElementById('icon-upload')?.click()
-                        }
-                        size="icon"
-                      >
-                        <Upload className="h-4 w-4" />
-                      </Button>
-
-                      <div className="flex h-9 w-9 items-center justify-center rounded-md border bg-gray-100 dark:bg-gray-700">
-                        {editingFavorite?.iconUrl ? (
-                          <img
-                            src={editingFavorite.iconUrl}
-                            alt="Prévia do ícone"
-                            className="h-6 w-6"
-                            onError={(e) =>
-                              (e.currentTarget.style.display = 'none')
-                            }
-                          />
-                        ) : (
-                          <img
-                            src={
-                              getFaviconUrl(editingFavorite?.url || '') ||
-                              '/placeholder.svg'
-                            }
-                            alt={editingFavorite?.name}
-                            className="h-6 w-6"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              const sibling = e.currentTarget
-                                .nextElementSibling as HTMLElement;
-                              if (sibling) sibling.style.display = 'block';
-                            }}
-                            draggable={false}
-                          />
-                        )}
-                      </div>
-                    </div>
-                    <p className="text-muted-foreground text-xs">
-                      Deixe vazio para usar o favicon automático do site.
-                    </p>
-
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleIconUpload}
-                      id="icon-upload"
-                      hidden
-                    />
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={editFavorite}
-                      className="flex-1 cursor-pointer"
-                    >
-                      Salvar
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsEditDialogOpen(false)}
-                      className="flex-1 cursor-pointer"
-                    >
-                      Cancelar
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <FavoriteFormDialog
+              open={isEditDialogOpen}
+              onOpenChange={setIsEditDialogOpen}
+              mode="edit"
+              defaultValues={{
+                url: editingFavorite?.url || '',
+                name: editingFavorite?.name || '',
+                iconUrl: editingFavorite?.iconUrl || ''
+              }}
+              onSubmit={editFavorite}
+              getFaviconUrl={getFaviconUrl}
+            />
           </div>
         </div>
 

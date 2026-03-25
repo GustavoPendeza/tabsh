@@ -77,14 +77,18 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen w-full" style={getBackgroundStyle()}>
+    <div className="flex min-h-screen w-full flex-col 2xl:block" style={getBackgroundStyle()}>
       {/* Overlay para melhor legibilidade quando há imagem de fundo */}
       {settings.backgroundType === 'image' && settings.backgroundImage ? (
         <div className="absolute inset-0 bg-black/10 dark:bg-black/30" />
       ) : null}
 
       {/* Widget do clima */}
-      {settings.weather ? <WeatherWidget settings={settings} /> : null}
+      {settings.weather ? (
+        <div className="z-10 w-full px-4 pt-4 sm:w-auto sm:self-end sm:px-6 sm:pt-6 2xl:absolute 2xl:top-6 2xl:right-6 2xl:max-w-[calc(100vw-3rem)] 2xl:p-0">
+          <WeatherWidget settings={settings} />
+        </div>
+      ) : null}
 
       {/* Botão de configurações */}
       <Configs
