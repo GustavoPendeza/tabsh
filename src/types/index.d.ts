@@ -1,3 +1,8 @@
+declare module '*.css' {
+  const content: { [className: string]: string };
+  export default content;
+}
+
 type Favorite = {
   id: string;
   name: string;

@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/next';
 import type { Metadata } from 'next';
 import { ThemeProvider } from 'next-themes';
 import { Inter } from 'next/font/google';
@@ -24,6 +25,7 @@ export default function RootLayout({
           <main>{children}</main>
           <Toaster position="bottom-center" richColors />
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
