@@ -25,7 +25,7 @@ export default function RootLayout({
           <main>{children}</main>
           <Toaster position="bottom-center" richColors />
         </ThemeProvider>
-        <Analytics />
+        {process.env.NEXT_PUBLIC_NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
   );
