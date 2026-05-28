@@ -231,7 +231,7 @@ export default function WeatherWidget({ settings }: Props) {
 
   return (
     <div
-        className="bg-card flex w-full items-center justify-center rounded-lg border border-gray-200/50 px-4 py-3 text-gray-800 shadow-lg backdrop-blur-sm sm:min-h-32 sm:w-52 sm:p-3 md:min-h-36 md:w-56 lg:min-h-40 lg:w-60 lg:p-4 dark:border-gray-700/50 dark:text-gray-100"
+        className="bg-card flex w-full items-center justify-center rounded-lg border border-gray-300/70 px-4 py-3 text-gray-800 shadow-lg backdrop-blur-sm sm:min-h-32 sm:w-52 sm:p-3 md:min-h-36 md:w-56 lg:min-h-40 lg:w-60 lg:p-4 dark:border-gray-700/50 dark:text-gray-100"
         style={getWeatherWidgetBackgroundStyle()}
       >
         {weatherLoading ? (
