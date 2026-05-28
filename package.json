@@ -10,6 +10,7 @@
     "prettier": "npx prettier -w ."
   },
   "dependencies": {
+    "@dnd-kit/react": "^0.4.0",
     "@hookform/resolvers": "^5.2.1",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",

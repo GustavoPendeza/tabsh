@@ -1,4 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
+import { DragDropProvider, useDragDropMonitor, PointerSensor } from '@dnd-kit/react';
+import { useSortable, isSortable } from '@dnd-kit/react/sortable';
+import { PointerActivationConstraints } from '@dnd-kit/dom';
 import { cn } from '@/lib/utils';
 import {
   CircleAlert,
@@ -22,6 +25,156 @@ import {
 } from './ui/context-menu';
 import { FavoriteFormSchema } from '@/lib/validations/favorite';
 
+function arrayMove<T>(array: T[], from: number, to: number): T[] {
+  const result = [...array];
+  result.splice(to, 0, result.splice(from, 1)[0]);
+  return result;
+}
+
+interface SortableItemProps {
+  favorite: Favorite;
+  index: number;
+  getFaviconUrl: (url: string) => string | null;
+  getNameUrl: (url: string) => string;
+  openEditDialog: (favorite: Favorite) => void;
+  removeFavorite: (id: string) => void;
+}
+
+function SortableFavoriteItem({
+  favorite,
+  index,
+  getFaviconUrl,
+  getNameUrl,
+  openEditDialog,
+  removeFavorite
+}: SortableItemProps) {
+  const { ref, isDragging } = useSortable({ id: favorite.id, index });
+
+  const wasDragged = useRef(false);
+
+  useDragDropMonitor({
+    onDragEnd() {
+      wasDragged.current = true;
+      setTimeout(() => {
+        wasDragged.current = false;
+      }, 50);
+    }
+  });
+
+  return (
+    <div
+      ref={ref as React.Ref<HTMLDivElement>}
+      style={{
+        opacity: isDragging ? 0.4 : undefined,
+        zIndex: isDragging ? 10 : undefined
+      }}
+    >
+      <ContextMenu>
+        <ContextMenuTrigger>
+          <div className="group relative min-h-24 min-w-28 cursor-grab rounded-lg border border-gray-100/50 bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:shadow-sm active:cursor-grabbing dark:border-gray-700/50 dark:bg-gray-800/90 dark:hover:bg-gray-800">
+            <div className="absolute -top-1 -right-1 z-20 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+              <button
+                onClick={() => openEditDialog(favorite)}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-white transition hover:cursor-pointer hover:bg-blue-600"
+              >
+                <span className="text-[8px]">
+                  <Pencil className="h-2.5 w-2.5" />
+                </span>
+              </button>
+              <button
+                onClick={() => removeFavorite(favorite.id)}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-400 text-white transition hover:cursor-pointer hover:bg-red-600"
+              >
+                <X className="h-2.5 w-2.5" />
+              </button>
+            </div>
+
+            <a
+              href={favorite.url}
+              rel="noopener noreferrer"
+              className="absolute inset-0 flex flex-col items-center justify-center gap-y-1.5 overflow-hidden rounded-lg text-center"
+              draggable={false}
+              tabIndex={-1}
+              onClick={(e) => {
+                if (wasDragged.current) {
+                  e.preventDefault();
+                }
+              }}
+            >
+              <div className="mx-auto flex h-full w-full items-center justify-center bg-gray-100 dark:bg-gray-700">
+                <img
+                  src={
+                    favorite.iconUrl ||
+                    getFaviconUrl(favorite.url) ||
+                    '/placeholder.svg'
+                  }
+                  alt={favorite.name}
+                  className="h-8 w-8"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const sibling = e.currentTarget
+                      .nextElementSibling as HTMLElement;
+                    if (sibling) sibling.style.display = 'block';
+                  }}
+                  draggable={false}
+                />
+                <span
+                  className="text-foreground hidden text-xs font-medium dark:text-gray-300"
+                  style={{ display: 'none' }}
+                >
+                  {favorite.name.charAt(0).toUpperCase() ||
+                    getNameUrl(favorite.url)}
+                </span>
+              </div>
+              <span
+                className="block w-full overflow-hidden px-2 pb-2.5 text-xs leading-tight font-medium text-nowrap text-ellipsis text-gray-700 dark:text-gray-200"
+                title={favorite.name.trim() || getNameUrl(favorite.url)}
+              >
+                {favorite.name.trim() || getNameUrl(favorite.url)}
+              </span>
+            </a>
+          </div>
+        </ContextMenuTrigger>
+
+        <ContextMenuContent>
+          <ContextMenuItem
+            className="cursor-pointer"
+            onClick={() => {
+              window.open(favorite.url, '_blank', 'noopener,noreferrer');
+            }}
+          >
+            <SquareArrowOutUpRight size={16} /> Abrir link em uma nova guia
+          </ContextMenuItem>
+          <ContextMenuItem
+            className="cursor-pointer"
+            onClick={() => {
+              navigator.clipboard.writeText(favorite.url);
+              toast.success('URL copiada!');
+            }}
+          >
+            <Copy size={16} /> Copiar URL
+          </ContextMenuItem>
+          <ContextMenuItem
+            className="cursor-pointer"
+            onClick={() => openEditDialog(favorite)}
+          >
+            <Edit size={16} /> Editar
+          </ContextMenuItem>
+          <ContextMenuItem
+            variant="destructive"
+            className="cursor-pointer"
+            onClick={() => removeFavorite(favorite.id)}
+          >
+            <Trash size={16} /> Excluir
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    </div>
+  );
+}
+
 interface Props {
   settings: Settings;
   saveSettings: (settings: Settings) => void;
@@ -31,8 +184,6 @@ export default function Favorites({ settings, saveSettings }: Props) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingFavorite, setEditingFavorite] = useState<Favorite | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const draggedItem = useRef<Favorite | null>(null);
-  const dragOverItem = useRef<Favorite | null>(null);
 
   const addFavorite = (values: FavoriteFormSchema) => {
     const favorite = {
@@ -53,7 +204,6 @@ export default function Favorites({ settings, saveSettings }: Props) {
     updatedFavorites: Favorite[],
     favorite: Favorite
   ) => {
-    // Adiciona o favorito de volta na posição original
     const originalIndex = settings.favorites.findIndex(
       (f) => f.id === favorite.id
     );
@@ -64,14 +214,9 @@ export default function Favorites({ settings, saveSettings }: Props) {
       newFavorites.push(favorite);
     }
 
-    saveSettings({
-      ...settings,
-      favorites: newFavorites
-    });
+    saveSettings({ ...settings, favorites: newFavorites });
 
     toast.dismiss();
-    console.log(favorite);
-
     toast(`${favorite.name || getNameUrl(favorite.url)} foi restaurado.`);
   };
 
@@ -79,12 +224,8 @@ export default function Favorites({ settings, saveSettings }: Props) {
     const favoriteToRemove = settings.favorites.find((f) => f.id === id);
     if (!favoriteToRemove) return;
 
-    // Remove o favorito do estado imediatamente para feedback visual
     const updatedFavorites = settings.favorites.filter((f) => f.id !== id);
-    saveSettings({
-      ...settings,
-      favorites: updatedFavorites
-    });
+    saveSettings({ ...settings, favorites: updatedFavorites });
 
     toast.dismiss();
     toast(
@@ -153,262 +294,115 @@ export default function Favorites({ settings, saveSettings }: Props) {
     setIsEditDialogOpen(true);
   };
 
-  // Drag and Drop Handlers
-  const handleDragStart = (
-    e: React.DragEvent<HTMLDivElement>,
-    favorite: Favorite
-  ) => {
-    draggedItem.current = favorite;
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', favorite.id);
-    e.currentTarget.classList.add('opacity-50'); // Visual feedback
-  };
+  const handleDragEnd = (event: any) => {
+    const { source } = event.operation;
+    if (!source || event.operation.canceled) return;
+    if (!isSortable(source)) return;
 
-  const handleDragEnter = (
-    e: React.DragEvent<HTMLDivElement>,
-    favorite: Favorite
-  ) => {
-    e.preventDefault();
-    dragOverItem.current = favorite;
-    e.currentTarget.classList.add('border-blue-500'); // Visual feedback
-  };
+    const from = source.initialIndex as number;
+    const to = source.index as number;
+    if (from === to) return;
 
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.currentTarget.classList.remove('border-blue-500'); // Remove visual feedback
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault(); // Necessary to allow dropping
-    e.dataTransfer.dropEffect = 'move';
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.currentTarget.classList.remove('border-blue-500'); // Remove visual feedback
-
-    if (
-      draggedItem.current &&
-      dragOverItem.current &&
-      draggedItem.current.id !== dragOverItem.current.id
-    ) {
-      const newFavorites = [...settings.favorites];
-      const draggedIndex = newFavorites.findIndex(
-        (f) => f.id === draggedItem.current?.id
-      );
-      const dragOverIndex = newFavorites.findIndex(
-        (f) => f.id === dragOverItem.current?.id
-      );
-
-      if (draggedIndex !== -1 && dragOverIndex !== -1) {
-        const [removed] = newFavorites.splice(draggedIndex, 1);
-        newFavorites.splice(dragOverIndex, 0, removed);
-        saveSettings({ ...settings, favorites: newFavorites });
-      }
-    }
-    draggedItem.current = null;
-    dragOverItem.current = null;
-  };
-
-  const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
-    e.currentTarget.classList.remove('opacity-50'); // Remove visual feedback
-    // Ensure all dragOverItem borders are removed in case of cancelled drag
-    const allFavoriteElements = document.querySelectorAll('.favorite-item');
-    allFavoriteElements.forEach((el) => el.classList.remove('border-blue-500'));
-  };
-
-  const handleRemoveFavoriteFromContext = (id: string) => {
-    removeFavorite(id);
+    saveSettings({
+      ...settings,
+      favorites: arrayMove(settings.favorites, from, to)
+    });
   };
 
   return (
     <>
-      <div className="relative flex flex-1 items-center justify-center p-6 2xl:min-h-screen">
-        <div className="w-full max-w-5xl">
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 2xl:grid-cols-8">
-            {settings.favorites.length > 0 &&
-              settings.favorites.map((favorite) => (
-                <ContextMenu key={favorite.id}>
-                  <ContextMenuTrigger>
-                    <div
-                      className="group relative min-h-24 min-w-28 rounded-lg border border-gray-100/50 bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:shadow-sm dark:border-gray-700/50 dark:bg-gray-800/90 dark:hover:bg-gray-800"
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, favorite)}
-                      onDragEnter={(e) => handleDragEnter(e, favorite)}
-                      onDragLeave={handleDragLeave}
-                      onDragEnd={handleDragEnd}
-                      onDrop={handleDrop}
-                      onDragOver={handleDragOver}
-                    >
-                      <div className="absolute -top-1 -right-1 z-20 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                        <button
-                          onClick={() => openEditDialog(favorite)}
-                          className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-white transition hover:cursor-pointer hover:bg-blue-600"
-                        >
-                          <span className="text-[8px]">
-                            <Pencil className="h-2.5 w-2.5" />
-                          </span>
-                        </button>
-                        <button
-                          onClick={() => removeFavorite(favorite.id)}
-                          className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-400 text-white transition hover:cursor-pointer hover:bg-red-600"
-                        >
-                          <X className="h-2.5 w-2.5" />
-                        </button>
-                      </div>
+      <DragDropProvider
+        sensors={[
+          PointerSensor.configure({
+            activationConstraints: [
+              new PointerActivationConstraints.Distance({ value: 8 })
+            ],
+            preventActivation: (event, source) => {
+              const el = source.handle ?? source.element;
+              return !el?.contains(event.target as Node);
+            }
+          })
+        ]}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="relative flex flex-1 items-center justify-center p-6 2xl:min-h-screen">
+          <div className="w-full max-w-5xl">
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 2xl:grid-cols-8">
+              {settings.favorites.length > 0 &&
+                settings.favorites.map((favorite, index) => (
+                  <SortableFavoriteItem
+                    key={favorite.id}
+                    favorite={favorite}
+                    index={index}
+                    getFaviconUrl={getFaviconUrl}
+                    getNameUrl={getNameUrl}
+                    openEditDialog={openEditDialog}
+                    removeFavorite={removeFavorite}
+                  />
+                ))}
 
-                      <a
-                        href={favorite.url}
-                        rel="noopener noreferrer"
-                        className="absolute inset-0 flex flex-col items-center justify-center gap-y-1.5 overflow-hidden rounded-lg text-center"
-                        draggable={false}
-                        onDragStart={(e) => e.preventDefault()}
-                        tabIndex={-1}
-                      >
-                        <div className="mx-auto flex h-full w-full items-center justify-center bg-gray-100 dark:bg-gray-700">
-                          <img
-                            src={
-                              favorite.iconUrl ||
-                              getFaviconUrl(favorite.url) ||
-                              '/placeholder.svg'
-                            }
-                            alt={favorite.name}
-                            className="h-8 w-8"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              const sibling = e.currentTarget
-                                .nextElementSibling as HTMLElement;
-                              if (sibling) sibling.style.display = 'block';
-                            }}
-                            draggable={false}
-                          />
-                          <span
-                            className="text-foreground hidden text-xs font-medium dark:text-gray-300"
-                            style={{ display: 'none' }}
-                          >
-                            {favorite.name.charAt(0).toUpperCase() ||
-                              getNameUrl(favorite.url)}
-                          </span>
-                        </div>
-                        <span
-                          className="block w-full overflow-hidden px-2 pb-2.5 text-xs leading-tight font-medium text-nowrap text-ellipsis text-gray-700 dark:text-gray-200"
-                          title={
-                            favorite.name.trim() || getNameUrl(favorite.url)
-                          }
-                        >
-                          {favorite.name.trim() || getNameUrl(favorite.url)}
-                        </span>
-                      </a>
-                    </div>
-                  </ContextMenuTrigger>
-
-                  {/** Context Menu for Favorites */}
-                  <ContextMenuContent>
-                    <ContextMenuItem
-                      className="cursor-pointer"
-                      onClick={() => {
-                        if (favorite) {
-                          window.open(
-                            favorite.url,
-                            '_blank',
-                            'noopener,noreferrer'
-                          );
-                        }
-                      }}
-                    >
-                      <SquareArrowOutUpRight size={16} /> Abrir link em uma nova
-                      guia
-                    </ContextMenuItem>
-                    <ContextMenuItem
-                      className="cursor-pointer"
-                      onClick={() => {
-                        if (favorite) {
-                          navigator.clipboard.writeText(favorite.url);
-                          toast.success('URL copiada!');
-                        }
-                      }}
-                    >
-                      <Copy size={16} /> Copiar URL
-                    </ContextMenuItem>
-                    <ContextMenuItem
-                      className="cursor-pointer"
-                      onClick={() => openEditDialog(favorite)}
-                    >
-                      <Edit size={16} /> Editar
-                    </ContextMenuItem>
-                    <ContextMenuItem
-                      variant="destructive"
-                      className="cursor-pointer"
-                      onClick={() =>
-                        handleRemoveFavoriteFromContext(favorite.id)
-                      }
-                    >
-                      <Trash size={16} /> Excluir
-                    </ContextMenuItem>
-                  </ContextMenuContent>
-                </ContextMenu>
-              ))}
-
-            {/* Botão adicionar */}
-            <button
-              type="button"
-              onClick={() => setIsAddDialogOpen(true)}
-              className={cn(
-                settings.favorites.length > 0
-                  ? 'flex min-h-24 min-w-28 cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-gray-200/60 bg-gray-50/80 text-gray-500 backdrop-blur-sm transition-colors hover:bg-gray-100/80 dark:border-gray-600/60 dark:bg-gray-800/80 dark:text-gray-400 dark:hover:bg-gray-700/80'
-                  : 'hidden'
-              )}
-            >
-              <Plus size={22} />
-              <span className="text-sm">Adicionar</span>
-            </button>
-
-            <FavoriteFormDialog
-              open={isAddDialogOpen}
-              onOpenChange={setIsAddDialogOpen}
-              mode="add"
-              onSubmit={addFavorite}
-            />
-
-            <FavoriteFormDialog
-              open={isEditDialogOpen}
-              onOpenChange={setIsEditDialogOpen}
-              mode="edit"
-              defaultValues={{
-                url: editingFavorite?.url || '',
-                name: editingFavorite?.name || '',
-                iconUrl: editingFavorite?.iconUrl || ''
-              }}
-              onSubmit={editFavorite}
-              getFaviconUrl={getFaviconUrl}
-            />
+              {/* Botão adicionar */}
+              <button
+                type="button"
+                onClick={() => setIsAddDialogOpen(true)}
+                className={cn(
+                  settings.favorites.length > 0
+                    ? 'flex min-h-24 min-w-28 cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-gray-200/60 bg-gray-50/80 text-gray-500 backdrop-blur-sm transition-colors hover:bg-gray-100/80 dark:border-gray-600/60 dark:bg-gray-800/80 dark:text-gray-400 dark:hover:bg-gray-700/80'
+                    : 'hidden'
+                )}
+              >
+                <Plus size={22} />
+                <span className="text-sm">Adicionar</span>
+              </button>
+            </div>
           </div>
+
+          {settings.favorites.length === 0 && (
+            <div className="fixed right-6 bottom-20 z-10">
+              <button
+                className="relative cursor-pointer rounded-full bg-white/80 p-3 text-gray-500 shadow-lg backdrop-blur-sm transition-colors hover:bg-white/90 hover:text-gray-700 dark:bg-gray-800/80 dark:text-gray-300 dark:hover:bg-gray-800/90 dark:hover:text-white"
+                type="button"
+                onClick={() => {
+                  setIsAddDialogOpen(true);
+                  if (settings.showAddFirstUrlAlert) {
+                    saveSettings({ ...settings, showAddFirstUrlAlert: false });
+                  }
+                }}
+              >
+                {settings.showAddFirstUrlAlert && (
+                  <span
+                    className="absolute right-0 bottom-7 animate-bounce text-yellow-400"
+                    style={{ animationDuration: '1s' }}
+                  >
+                    <CircleAlert size={24} />
+                  </span>
+                )}
+                <Plus className="h-5 w-5" />
+              </button>
+            </div>
+          )}
         </div>
 
-        {settings.favorites.length === 0 && (
-          <div className="fixed right-6 bottom-20 z-10">
-            <button
-              className="relative cursor-pointer rounded-full bg-white/80 p-3 text-gray-500 shadow-lg backdrop-blur-sm transition-colors hover:bg-white/90 hover:text-gray-700 dark:bg-gray-800/80 dark:text-gray-300 dark:hover:bg-gray-800/90 dark:hover:text-white"
-              type="button"
-              onClick={() => {
-                setIsAddDialogOpen(true);
-                if (settings.showAddFirstUrlAlert) {
-                  saveSettings({ ...settings, showAddFirstUrlAlert: false });
-                }
-              }}
-            >
-              {settings.showAddFirstUrlAlert && (
-                <span
-                  className="absolute right-0 bottom-7 animate-bounce text-yellow-400"
-                  style={{ animationDuration: '1s' }}
-                >
-                  <CircleAlert size={24} />
-                </span>
-              )}
-              <Plus className="h-5 w-5" />
-            </button>
-          </div>
-        )}
-      </div>
+        <FavoriteFormDialog
+          open={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+          mode="add"
+          onSubmit={addFavorite}
+        />
+
+        <FavoriteFormDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          mode="edit"
+          defaultValues={{
+            url: editingFavorite?.url || '',
+            name: editingFavorite?.name || '',
+            iconUrl: editingFavorite?.iconUrl || ''
+          }}
+          onSubmit={editFavorite}
+          getFaviconUrl={getFaviconUrl}
+        />
+      </DragDropProvider>
     </>
   );
 }
