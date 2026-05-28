@@ -71,7 +71,7 @@ function SortableFavoriteItem({
     >
       <ContextMenu>
         <ContextMenuTrigger>
-          <div className="group relative min-h-24 min-w-28 cursor-grab rounded-lg border border-gray-100/50 bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:shadow-sm active:cursor-grabbing dark:border-gray-700/50 dark:bg-gray-800/90 dark:hover:bg-gray-800">
+          <div className="group relative min-h-24 min-w-28 cursor-grab rounded-lg border border-gray-300/70 bg-white/95 backdrop-blur-sm transition-all hover:bg-white hover:shadow-sm active:cursor-grabbing dark:border-gray-700/50 dark:bg-gray-800/90 dark:hover:bg-gray-800">
             <div className="absolute -top-1 -right-1 z-20 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
               <button
                 onClick={() => openEditDialog(favorite)}
@@ -103,7 +103,7 @@ function SortableFavoriteItem({
                 }
               }}
             >
-              <div className="mx-auto flex h-full w-full items-center justify-center bg-gray-100 dark:bg-gray-700">
+              <div className="mx-auto flex h-full w-full items-center justify-center bg-gray-200 dark:bg-gray-700">
                 <img
                   src={
                     favorite.iconUrl ||
@@ -347,7 +347,7 @@ export default function Favorites({ settings, saveSettings }: Props) {
                 onClick={() => setIsAddDialogOpen(true)}
                 className={cn(
                   settings.favorites.length > 0
-                    ? 'flex min-h-24 min-w-28 cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-gray-200/60 bg-gray-50/80 text-gray-500 backdrop-blur-sm transition-colors hover:bg-gray-100/80 dark:border-gray-600/60 dark:bg-gray-800/80 dark:text-gray-400 dark:hover:bg-gray-700/80'
+                    ? 'flex min-h-24 min-w-28 cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-gray-400/60 bg-gray-100/80 text-gray-500 backdrop-blur-sm transition-colors hover:bg-gray-200/80 dark:border-gray-600/60 dark:bg-gray-800/80 dark:text-gray-400 dark:hover:bg-gray-700/80'
                     : 'hidden'
                 )}
               >
@@ -360,7 +360,7 @@ export default function Favorites({ settings, saveSettings }: Props) {
           {settings.favorites.length === 0 && (
             <div className="fixed right-6 bottom-20 z-10">
               <button
-                className="relative cursor-pointer rounded-full bg-white/80 p-3 text-gray-500 shadow-lg backdrop-blur-sm transition-colors hover:bg-white/90 hover:text-gray-700 dark:bg-gray-800/80 dark:text-gray-300 dark:hover:bg-gray-800/90 dark:hover:text-white"
+                className="relative cursor-pointer rounded-full bg-white p-3 text-gray-600 shadow-lg backdrop-blur-sm transition-colors hover:bg-gray-100 hover:text-gray-800 dark:bg-gray-800/80 dark:text-gray-300 dark:hover:bg-gray-800/90 dark:hover:text-white"
                 type="button"
                 onClick={() => {
                   setIsAddDialogOpen(true);
