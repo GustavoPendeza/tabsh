@@ -1,8 +1,13 @@
 /* eslint-disable @next/next/no-img-element */
-import { DragDropProvider, useDragDropMonitor, PointerSensor } from '@dnd-kit/react';
-import { useSortable, isSortable } from '@dnd-kit/react/sortable';
-import { PointerActivationConstraints } from '@dnd-kit/dom';
 import { cn } from '@/lib/utils';
+import { FavoriteFormSchema } from '@/lib/validations/favorite';
+import { PointerActivationConstraints } from '@dnd-kit/dom';
+import {
+  DragDropProvider,
+  PointerSensor,
+  useDragDropMonitor
+} from '@dnd-kit/react';
+import { isSortable, useSortable } from '@dnd-kit/react/sortable';
 import {
   CircleAlert,
   Copy,
@@ -23,7 +28,6 @@ import {
   ContextMenuItem,
   ContextMenuTrigger
 } from './ui/context-menu';
-import { FavoriteFormSchema } from '@/lib/validations/favorite';
 
 function arrayMove<T>(array: T[], from: number, to: number): T[] {
   const result = [...array];
@@ -71,7 +75,7 @@ function SortableFavoriteItem({
     >
       <ContextMenu>
         <ContextMenuTrigger>
-          <div className="group relative min-h-24 min-w-28 cursor-grab rounded-lg border border-gray-300/70 bg-white/95 backdrop-blur-sm transition-all hover:bg-white hover:shadow-sm active:cursor-grabbing dark:border-gray-700/50 dark:bg-gray-800/90 dark:hover:bg-gray-800">
+          <div className="group relative min-h-24 min-w-28 cursor-grab rounded-lg border border-gray-300/70 bg-white/95 backdrop-blur-sm transition-all select-none hover:bg-white hover:shadow-sm active:cursor-grabbing dark:border-gray-700/50 dark:bg-gray-800/90 dark:hover:bg-gray-800">
             <div className="absolute -top-1 -right-1 z-20 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
               <button
                 onClick={() => openEditDialog(favorite)}
@@ -347,7 +351,7 @@ export default function Favorites({ settings, saveSettings }: Props) {
                 onClick={() => setIsAddDialogOpen(true)}
                 className={cn(
                   settings.favorites.length > 0
-                    ? 'flex min-h-24 min-w-28 cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-gray-400/60 bg-gray-100/80 text-gray-500 backdrop-blur-sm transition-colors hover:bg-gray-200/80 dark:border-gray-600/60 dark:bg-gray-800/80 dark:text-gray-400 dark:hover:bg-gray-700/80'
+                    ? 'flex min-h-24 min-w-28 cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-gray-400/60 bg-gray-100/80 text-gray-500 backdrop-blur-sm transition-colors select-none hover:bg-gray-200/80 dark:border-gray-600/60 dark:bg-gray-800/80 dark:text-gray-400 dark:hover:bg-gray-700/80'
                     : 'hidden'
                 )}
               >
