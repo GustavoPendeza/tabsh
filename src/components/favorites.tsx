@@ -15,7 +15,7 @@ import {
   Pencil,
   Plus,
   SquareArrowOutUpRight,
-  Trash,
+  Trash2,
   X
 } from 'lucide-react';
 import { useRef, useState } from 'react';
@@ -171,7 +171,7 @@ function SortableFavoriteItem({
             className="cursor-pointer"
             onClick={() => removeFavorite(favorite.id)}
           >
-            <Trash size={16} /> Excluir
+            <Trash2 size={16} /> Excluir
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
