@@ -1,4 +1,5 @@
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata } from 'next';
 import { ThemeProvider } from 'next-themes';
 import { Inter } from 'next/font/google';
@@ -26,6 +27,7 @@ export default function RootLayout({
           <Toaster position="bottom-center" richColors />
         </ThemeProvider>
         {process.env.NEXT_PUBLIC_NODE_ENV === 'production' && <Analytics />}
+        {process.env.NEXT_PUBLIC_NODE_ENV === 'production' && <SpeedInsights />}
       </body>
     </html>
   );
